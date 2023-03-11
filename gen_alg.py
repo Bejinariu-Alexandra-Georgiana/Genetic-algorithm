@@ -75,12 +75,6 @@ GENERATIONS = 1200  # Number of generations
 
 def genetic_algorithm():
     def calculate_fitness(population):
-        """
-        Calculates the fitness score for each individual in the population.
-        The fitness score is defined as the sum of the squared distances between
-        the vertices of the two triangles after they are overlapped, plus a penalty
-        term for non-parallelism.
-        """
         fitness_scores = []
         for individual in population:
             # Calculate the new position of triangle_2 by adding the displacement vector
@@ -117,9 +111,6 @@ def genetic_algorithm():
         return child_1, child_2
 
     def mutate(individual):
-        """
-        Mutates an individual by randomly changing one gene.
-        """
         if np.random.random() < MUTATION_RATE:
             # Choose a random gene to mutate
             gene_index = np.random.randint(len(individual))
@@ -202,20 +193,6 @@ def genetic_algorithm():
 
 
 def shift_triangle(triangle_1, triangle_2, distance, shift_second_triangle=True):
-    """
-    Shifts one of the triangles at a distance of `distance` from the other while
-    keeping them parallel and overlapping.
-    
-    Args:
-    - triangle_1 (numpy.ndarray): The first triangle as a 3x3 array of vertices.
-    - triangle_2 (numpy.ndarray): The second triangle as a 3x3 array of vertices.
-    - distance (float): The distance to shift the triangle.
-    - shift_second_triangle (bool): A flag indicating whether to shift the second
-      triangle (True) or the first triangle (False).
-    
-    Returns:
-    - shifted_triangle (numpy.ndarray): The shifted triangle as a 3x3 array of vertices.
-    """
     # Compute the normal vector of the plane defined by the two triangles
     normal_vector = np.cross(triangle_1[1] - triangle_1[0], triangle_1[2] - triangle_1[0])
     
