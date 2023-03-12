@@ -98,9 +98,7 @@ def genetic_algorithm():
 
 
     def crossover(parent_1, parent_2):
-        """
-        Performs single-point crossover on two parents to generate two children.
-        """
+       # single-point crossover on two parents to generate two children.
             # Choose a random crossover point
         crossover_point = np.random.randint(1, len(parent_1))
 
@@ -111,6 +109,7 @@ def genetic_algorithm():
         return child_1, child_2
 
     def mutate(individual):
+         # mutation of an individual by randomly changing one gene.
         if np.random.random() < MUTATION_RATE:
             # Choose a random gene to mutate
             gene_index = np.random.randint(len(individual))
@@ -189,10 +188,11 @@ def genetic_algorithm():
     best_triangle_2 = triangle_2 + displacement_vector
     return triangle_1, best_triangle_2
 
-## shifting function
+
 
 
 def shift_triangle(triangle_1, triangle_2, distance, shift_second_triangle=True):
+   # shifting one of the triangles from the other with a displacement 
     # Compute the normal vector of the plane defined by the two triangles
     normal_vector = np.cross(triangle_1[1] - triangle_1[0], triangle_1[2] - triangle_1[0])
     
