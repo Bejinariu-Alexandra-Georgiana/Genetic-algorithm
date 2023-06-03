@@ -103,12 +103,11 @@ def genetic_algorithm():
     def calculate_fitness(population, donor_homo, donor_lumo, acceptor_lumo, acceptor_homo):
         fitness_scores = []
         for individual in population:
-            # Calculate the new position of triangle_2 by adding the displacement vector
-            # to each vertex of triangle_2
+            # The new position of triangle_2 
             displacement_vector = individual.reshape((3, 3))
             new_triangle_2 = triangle_2 + displacement_vector
 
-            # Calculate the sum of the squared distances between the vertices of the two triangles
+            # Sum of the squared distances between the vertices of the two triangles
             distances = np.sum((triangle_1 - new_triangle_2)**2)
 
             # Extract the homo and lumo
