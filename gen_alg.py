@@ -50,6 +50,7 @@ class Atom:
 ##### Find the coordinates 
 
 def molCoordHex(file):
+    # read the input file
     with open(file, 'r') as f:
         data = f.readlines()
 
@@ -103,11 +104,12 @@ def genetic_algorithm():
     def calculate_fitness(population, donor_homo, donor_lumo, acceptor_lumo, acceptor_homo):
         fitness_scores = []
         for individual in population:
-            # The new position of triangle_2 
+            # Calculate the new position of triangle_2 by adding the displacement vector
+            # to each vertex of triangle_2
             displacement_vector = individual.reshape((3, 3))
             new_triangle_2 = triangle_2 + displacement_vector
 
-            # Sum of the squared distances between the vertices of the two triangles
+            # Calculate the sum of the squared distances between the vertices of the two triangles
             distances = np.sum((triangle_1 - new_triangle_2)**2)
 
             # Extract the homo and lumo
@@ -116,7 +118,7 @@ def genetic_algorithm():
             btt_lumo = donor_lumo
             c60_homo = acceptor_homo
 
-            # Calculate the LUMO-HOMO gaps
+            # Calculate the charge transfer
             charge_transfer = c60_lumo - btt_homo
             donor_diff =  btt_lumo - btt_homo
             acceptor_diff =  c60_lumo - c60_homo
@@ -126,39 +128,51 @@ def genetic_algorithm():
             # Add the penalty term to the fitness score with a weight factor
                 fitness_scores.append(distances + 0.1* abs(charge_transfer))
             else:
-            # If charge transfer is not possible, docking can not be performed
+            # If charge transfer is not possible, assign a high fitness score to the individual
                 fitness_scores.append(1e6)
         return np.array(fitness_scores)
 
     def crossover(parent_1, parent_2):
-        # Single-point crossover.
-        
-        # Choose a random crossover point
+        """
+        Single-point crossover on two parents to generate two children.
+        """
+            # Choose a random crossover point
         crossover_point = np.random.randint(1, len(parent_1))
 
-
+            # Combine the genes of the parents to create the children
         child_1 = np.concatenate([parent_1[:crossover_point], parent_2[crossover_point:]])
         child_2 = np.concatenate([parent_2[:crossover_point], parent_1[crossover_point:]])
 
         return child_1, child_2
+ 
+
+
 
     def mutate(individual):
-         for i in range(len(individual)):
-            # 0.1 - flexibility factor
+        """
+        Randomly mutates the individual.
+        """
+        for i in range(len(individual)):
+           # 0.1 - flexibility factor
             if np.random.rand() < MUTATION_RATE:
                 individual[i] += np.random.randn() * 0.1
         return individual
 
+ 
 
-    # Initial population
+
+
+
+
+    # Create the initial population
     population = np.random.randn(POPULATION_SIZE, 9)
 
-    # Run the genetic algorithm 
+    # The genetic algorithm for the specified number of generations
     for generation in range(GENERATIONS):
-        # Fitness scores for the population
+        # Calculate the fitness scores for the population
         fitness_scores = calculate_fitness(population, donor_homo, donor_lumo, acceptor_lumo, acceptor_homo)
 
-        # Tournament selection
+        # Select the parents for the next generation using tournament selection
         parent_indices = []
         for i in range(POPULATION_SIZE):
             tournament_indices = np.random.choice(POPULATION_SIZE, 2, replace=False)
@@ -167,40 +181,51 @@ def genetic_algorithm():
             else:
                 parent_indices.append(tournament_indices[1])
 
+        # Create the next generation by performing crossover and mutation on the parents
         next_generation = []
         for i in range(POPULATION_SIZE//2):
             parent_1 = population[parent_indices[2*i]]
             parent_2 = population[parent_indices[2*i+1]]
 
-          
+            # Perform crossover to create two children
             child_1, child_2 = crossover(parent_1, parent_2)
 
+            # Mutate the children
             child_1 = mutate(child_1)
             child_2 = mutate(child_2)
 
+            # Add the children to the next generation
             next_generation.append(child_1)
             next_generation.append(child_2)
 
+        # Replace the current population with the next generation
         population = np.array(next_generation)
 
+        # Print the best fitness score of the current generation
         best_fitness = np.min(fitness_scores)
         print(f"Generation {generation}: Best fitness = {best_fitness}")
 
     
+
+
+        # Check if the termination condition is met (fitness score of 0)
         if best_fitness == 0:
             break
 
     best_individual = population[np.argmin(calculate_fitness(population, donor_homo, donor_lumo, acceptor_lumo, acceptor_homo))]
 
-    # Best pair of triangles
+    # Find the best pair of triangles
     displacement_vector = best_individual.reshape((3, 3))
     best_triangle_2 = triangle_2 + displacement_vector
     return triangle_1, best_triangle_2
 
 ## shifting function
 def shift_triangle(triangle_1, triangle_2, distance, shift_second_triangle=True):
+
+    # Compute the normal vector of the plane defined by the two triangles
     normal_vector = np.cross(triangle_1[1] - triangle_1[0], triangle_1[2] - triangle_1[0])
     
+    # Compute the displacement vector as a scalar multiple of the normal vector
     if shift_second_triangle:
         displacement_vector = normal_vector / np.linalg.norm(normal_vector) * distance
         shifted_triangle = triangle_2 + displacement_vector
@@ -213,8 +238,9 @@ def shift_triangle(triangle_1, triangle_2, distance, shift_second_triangle=True)
 
 ## PDB file
 def WritePDB(file, atoms):
-   #  Writes a pdb file for atoms.
-
+    #------------------------------------------------------------------------------
+    #  Writes a pdb file for atoms.
+    #------------------------------------------------------------------------------
     pdb = open(file,"w")
     
     strfrm = "ATOM  {:5d} {:4s} {:4s}{:1s}{:4d}    {:8.3f}{:8.3f}{:8.3f}" + \
@@ -243,16 +269,23 @@ def main():
     
     new_triangle_2 = shift_triangle(triangle_1, triangle_2, d)
 
-  # LUMO - HOMO gaps
+
+
+  
+    
     print("donor_diff")
     print(donor_lumo - donor_homo)
     
     print("acceptor_diff")
     print(acceptor_lumo-acceptor_homo)
 
+
+    
     print("charge transfer")
     print((acceptor_lumo-donor_homo)*27.21)
 
+
+   # Create atom objects with updated coordinates
     atoms = []
 
     # first triangle - blue color
@@ -261,7 +294,7 @@ def main():
         atom = Atom(name="C", resi="1", segm=" ", ires=i+1, r=r, occp=1.00, beta=0.00, symb="C")
         atoms.append(atom)
 
-   # second triangle - initial state - red color
+
     for i, coord in enumerate(initial_triangle_2):
         r = VecR3(coord[0], coord[1], coord[2])
         atom = Atom(name="O", resi="1", segm=" ", ires=i+1, r=r, occp=1.00, beta=0.00, symb="O")
@@ -270,8 +303,9 @@ def main():
     # second triangle generated by the algorithm and shifted - yellow color
     for i, coord in enumerate(new_triangle_2):
         r = VecR3(coord[0], coord[1], coord[2])
-        atom = Atom(name="O", resi="1", segm=" ", ires=i+1, r=r, occp=1.00, beta=0.00, symb="O")
+        atom = Atom(name="S", resi="1", segm=" ", ires=i+1, r=r, occp=1.00, beta=0.00, symb="S")
         atoms.append(atom)
+
 
 
 
